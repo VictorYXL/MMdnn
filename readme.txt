@@ -27,6 +27,6 @@
 				stride: 1
 			}
 		}
-	2.4 Remove others layer after pooling and split layer except InnerProduct layer
-3 Use v-xianly's mmdnn (https://github.com/VictorYXL/MMdnn/tree/v-xianly/CNTK_to_onnx) to convert:
+	2.4 Remove others layer except InnerProduct layer
+3 Use v-xianly's mmdnn (https://github.com/VictorYXL/MMdnn/tree/v-xianly/caffe_detection) to convert:
 	mmconvert -sf caffe -in xxx.prototxt -iw xxx.caffemodel -df onnx -om xxx.onnx
