@@ -1,4 +1,4 @@
-1 Make sure to run in our own pycaffe(in these folder's caffe is based on python3.5)
+1 Make sure to run in our custom pycaffe(in these folder's caffe is based on python3.5)
 2 Polish the prototxt manually:
 	2.1 Remove ImageNormalization layer
 	2.2 Remove crop layer when the input is the multiple of 32 and modify the related layers' bottom
@@ -27,6 +27,7 @@
 				stride: 1
 			}
 		}
-	2.4 Remove others layer except InnerProduct layer
+	2.4 Remove others layer except last 12 InnerProduct layers
+	2.5 Make sure InnerProduct layers in order score_g1 delta_g1 landmark_delta_g1 ... score_g4 delta_g4 landmark_delta_g24
 3 Use v-xianly's mmdnn (https://github.com/VictorYXL/MMdnn/tree/v-xianly/caffe_detection) to convert:
 	mmconvert -sf caffe -in xxx.prototxt -iw xxx.caffemodel -df onnx -om xxx.onnx

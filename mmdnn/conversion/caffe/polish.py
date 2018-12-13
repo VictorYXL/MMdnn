@@ -124,39 +124,60 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
         caffemodel.layer.pop()
     caffemodel.layer.extend(dst_layers)
 
+# Must run in custom caffe
 def special_polish_for_pva_net(caffemodel):
     src_layers = caffemodel.layer
     if src_layers[-14].type == 'Pooling' and src_layers[-13].type == 'Split' and [layer.type for layer in src_layers[-12:]] == ['InnerProduct'] * 12:
-        print('Merge these layer conv in layer: ' + str([layer.name for layer in src_layers[-14:]]))
+        print('Remove pooling layer: ' + str(src_layers[-14].name))
         for layer in src_layers[-12:]:
             if layer.blobs[0].shape.dim[1] != src_layers[-12].blobs[0].shape.dim[1]:
-                raise ValueError('Please make sure all the inner product has the same channel')
+                raise ValueError('All the inner product has the same channel')
         bottom_name = src_layers[-14].bottom[0]
-        inner_product_layers = src_layers[-12:]
+        top_name = ['score', 'delta', 'landmark_delta']
+        # Devide into score delta landmark_delta group
+        inner_product_layers = [src_layers[-12::3], src_layers[-11::3], src_layers[-10::3]]
+        # Special pre-process channle[1] - channel[0] for score inner product
+        for layer in inner_product_layers[0]:
+            if layer.blobs[0].shape.dim[0] == 2:
+                for i in range(layer.blobs[0].shape.dim[1]):
+                    layer.blobs[0].data[i] -= layer.blobs[0].data[i + layer.blobs[0].shape.dim[1]]
+                for i in range(layer.blobs[0].shape.dim[1]):
+                    t = layer.blobs[0].data.pop(-1)
+                layer.blobs[0].shape.dim[0] = 1
+                if len(layer.blobs) > 1:
+                     layer.blobs[1].data[0] -= layer.blobs[1].data[1]
+                     t = layer.blobs[1].data.pop(-1)
+                     layer.blobs[1].shape.dim[0] = 1
+            else:
+                raise ValueError('The channel of score inner product Must be 2')
         for i in range(14):
             src_layers.remove(src_layers[-1])
-        conv_layer = src_layers.add()
-        conv_layer.name = "last_conv"
-        conv_layer.type = u'Convolution'
-        conv_layer.bottom.append(bottom_name)
-        conv_layer.top.append('output_data')
-        kernel_count = sum(layer.blobs[0].shape.dim[0] for layer in inner_product_layers)
-        kernel_channel = inner_product_layers[0].blobs[0].shape.dim[1]
-        conv_layer.convolution_param.num_output = kernel_count
-        conv_layer.convolution_param.pad.append(0)
-        conv_layer.convolution_param.kernel_size.append(1)
-        conv_layer.convolution_param.stride.append(1)
-        kernel_blob = conv_layer.blobs.add()
-        kernel_blob.shape.dim.append(kernel_count)
-        kernel_blob.shape.dim.append(kernel_channel)
-        kernel_blob.shape.dim.append(1)
-        kernel_blob.shape.dim.append(1)
-        for layer in inner_product_layers:
-            kernel_blob.data.extend(layer.blobs[0].data)
-        bias_blob = conv_layer.blobs.add()
-        bias_blob.shape.dim.append(sum(layer.blobs[1].shape.dim[0] for layer in inner_product_layers))
-        for layer in inner_product_layers:
-            bias_blob.data.extend(layer.blobs[1].data)
+        for i in range(3):
+            print('Merge layers ' + str([layer.name for layer in inner_product_layers[i]]) + ' into output_' + top_name[i] + ' layer')
+            conv_layer = src_layers.add()
+            conv_layer.name = "output_" + top_name[i]
+            conv_layer.type = u'Convolution'
+            conv_layer.bottom.append(bottom_name)
+            conv_layer.top.append('output_' + top_name[i])
+            kernel_count = sum(layer.blobs[0].shape.dim[0] for layer in inner_product_layers[i])
+            kernel_channel = inner_product_layers[i][0].blobs[0].shape.dim[1]
+            conv_layer.convolution_param.num_output = kernel_count
+            conv_layer.convolution_param.pad.append(0)
+            conv_layer.convolution_param.kernel_size.append(1)
+            conv_layer.convolution_param.stride.append(1)
+            kernel_blob = conv_layer.blobs.add()
+            kernel_blob.shape.dim.append(kernel_count)
+            kernel_blob.shape.dim.append(kernel_channel)
+            kernel_blob.shape.dim.append(1)
+            kernel_blob.shape.dim.append(1)
+            for layer in inner_product_layers[i]:
+                kernel_blob.data.extend(layer.blobs[0].data)
+            if len(layer.blobs) > 1:
+                bias_blob = conv_layer.blobs.add()
+                bias_blob.shape.dim.append(sum(layer.blobs[1].shape.dim[0] for layer in inner_product_layers[i]))
+                for layer in inner_product_layers[i]:
+                    bias_blob.data.extend(layer.blobs[1].data)
+    
     else:
         raise ValueError('Please modify the prototxt first as readme_pvanet.txt')
     
