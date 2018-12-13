@@ -27,7 +27,8 @@ def add_lost_scale_after_bn(caffemodel):
                 layer.top.remove(name)
                 layer.top.insert(top_index, replace_name_map[name])
         dst_layers.extend([layer])
-        if layer.type == 'BatchNorm' and (index + 1 >= len(src_layers) or src_layers[index + 1].type != 'Scale'):
+        if layer.type == 'BatchNorm' and (index + 1 >= len(src_layers) or src_layers[index + 1].type != "Scale"):
+            print('Merge bn + scale in layer ' + str(layer.name))
             # BN (bn_input_name -> scale_input_name) 
             # Scale (scale_input_name -> scale_output_name)
             bn_origin_output_name = layer.top[0]
@@ -123,10 +124,50 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
         caffemodel.layer.pop()
     caffemodel.layer.extend(dst_layers)
 
+def special_polish_for_pva_net(caffemodel):
+    src_layers = caffemodel.layer
+    if src_layers[-14].type == 'Pooling' and src_layers[-13].type == 'Split' and [layer.type for layer in src_layers[-12:]] == ['InnerProduct'] * 12:
+        print('Merge these layer conv in layer: ' + str([layer.name for layer in src_layers[-14:]]))
+        for layer in src_layers[-12:]:
+            if layer.blobs[0].shape.dim[1] != src_layers[-12].blobs[0].shape.dim[1]:
+                raise ValueError('Please make sure all the inner product has the same channel')
+        bottom_name = src_layers[-14].bottom[0]
+        inner_product_layers = src_layers[-12:]
+        for i in range(14):
+            src_layers.remove(src_layers[-1])
+        conv_layer = src_layers.add()
+        conv_layer.name = "last_conv"
+        conv_layer.type = u'Convolution'
+        conv_layer.bottom.append(bottom_name)
+        conv_layer.top.append('output_data')
+        kernel_count = sum(layer.blobs[0].shape.dim[0] for layer in inner_product_layers)
+        kernel_channel = inner_product_layers[0].blobs[0].shape.dim[1]
+        conv_layer.convolution_param.num_output = kernel_count
+        conv_layer.convolution_param.pad.append(0)
+        conv_layer.convolution_param.kernel_size.append(1)
+        conv_layer.convolution_param.stride.append(1)
+        kernel_blob = conv_layer.blobs.add()
+        kernel_blob.shape.dim.append(kernel_count)
+        kernel_blob.shape.dim.append(kernel_channel)
+        kernel_blob.shape.dim.append(1)
+        kernel_blob.shape.dim.append(1)
+        for layer in inner_product_layers:
+            kernel_blob.data.extend(layer.blobs[0].data)
+        bias_blob = conv_layer.blobs.add()
+        bias_blob.shape.dim.append(sum(layer.blobs[1].shape.dim[0] for layer in inner_product_layers))
+        for layer in inner_product_layers:
+            bias_blob.data.extend(layer.blobs[1].data)
+    else:
+        raise ValueError('Please modify the prototxt first as readme_pvanet.txt')
+    
+
+
+
 def caffe_polish(src_model_file, dst_model_file, src_prototxt = None, dst_prototxt = None):
     tmp_model_file = None
     if src_prototxt != None and dst_prototxt != None:
-        tmp_model_file = 'temp_' + src_model_file
+        tmp_model_file = "temp_" + src_model_file
+        # Convert caffemodel + prototxt -> temp caffemodel
         net = caffe.Net(src_prototxt, src_model_file, caffe.TEST)
         net.save(tmp_model_file)
         file = open(tmp_model_file, 'rb')
@@ -139,11 +180,11 @@ def caffe_polish(src_model_file, dst_model_file, src_prototxt = None, dst_protot
 
     add_lost_scale_after_bn(caffe_model)
     split_bnmsra_into_bn_and_scale(caffe_model)
+    special_polish_for_pva_net(caffe_model)
 
     file = open(dst_model_file, 'wb')
     file.write(caffe_model.SerializeToString())
     file.close()
-    
     if src_prototxt != None and dst_prototxt != None:
         if tmp_model_file != None and os.path.exists(tmp_model_file):
             os.remove(tmp_model_file)
