@@ -35,6 +35,7 @@ class OnnxEmitter(Emitter):
         return """import numpy as np
 from onnx import helper, TensorProto, shape_inference
 import onnx
+import math
 
 __weights_dict = dict()
 
@@ -85,8 +86,7 @@ def KitModel(weight_file = None):
                                                                                                  self.initializer))
                       )
         self.add_body(1, "return helper.make_model(graph, opset_imports=[helper.make_opsetid('', 6)])")
-        # self.add_body(1, "model = helper.make_model(graph, opset_imports=[helper.make_opsetid('', 6)])")
-        # self.add_body(1, "return shape_inference.infer_shapes(model)")
+        # self.add_body(1, "return shape_inference.infer_shapes(onnx_model)")
         return self.body_code
 
     def run(self, dstNetworkPath, dstWeightPath=None, phase='test'):
@@ -572,7 +572,7 @@ def KitModel(weight_file = None):
             self.nodes.append(IR_node.variable_name)
 
     def emit_Concat(self, IR_node):
-        axis = IR_node.get_attr('axis') - 2
+        axis = IR_node.get_attr('axis') + 2
         inputs = ', '.join("'" + self.IR_graph.get_node(i).real_variable_name + "'" for i in IR_node.in_edges)
         self.add_body(1, "{:15} = helper.make_node('Concat', inputs=[{}], outputs=['{}'], axis={})".format(
             IR_node.variable_name,
