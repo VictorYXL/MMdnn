@@ -119,6 +119,7 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
             dst_layers[-1].ClearField("batch_norm_msra_param")
             # Add scale layer
             dst_layers.extend([scale_layer])
+
     for index in range(0, len(caffemodel.layer)):
         caffemodel.layer.pop()
     caffemodel.layer.extend(dst_layers)
