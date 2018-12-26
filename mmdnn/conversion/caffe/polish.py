@@ -74,8 +74,8 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
                 layer.top.remove(name)
                 layer.top.insert(top_index, replace_name_map[name])
         dst_layers.extend([layer])
+
         if layer.type == 'BatchNormMSRA':
-            
             # BNMSRA (bnmsra_input_name -> scale_input_name) 
             # Scale (scale_input_name -> scale_output_name)
             bnmsra_origin_output_name = layer.top[0]
@@ -118,20 +118,22 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
             dst_layers[-1].ClearField("batch_norm_msra_param")
             # Add scale layer
             dst_layers.extend([scale_layer])
+
     for index in range(0, len(caffemodel.layer)):
         caffemodel.layer.pop()
     caffemodel.layer.extend(dst_layers)
-def caffe_polish(src_model_file, dst_model_file, src_prototxt = None, dst_prototxt = None):
-    tmp_model_file = src_model_file
 
-    
+def caffe_polish(src_model_file, dst_model_file, src_prototxt = None, dst_prototxt = None):
+    tmp_model_file = None
     if src_prototxt != None and dst_prototxt != None:
         tmp_model_file = 'temp_' + src_model_file
         net = caffe.Net(src_prototxt, src_model_file, caffe.TEST)
         net.save(tmp_model_file)
+        file = open(tmp_model_file, 'rb')
+    else:
+        file = open(src_model_file, 'rb')
 
     caffe_model = caffe_pb2.NetParameter()
-    file = open(tmp_model_file, 'rb')
     caffe_model.ParseFromString(file.read())
     file.close()
 
