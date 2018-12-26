@@ -74,6 +74,7 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
                 layer.top.remove(name)
                 layer.top.insert(top_index, replace_name_map[name])
         dst_layers.extend([layer])
+
         if layer.type == 'BatchNormMSRA':
             # BNMSRA (bnmsra_input_name -> scale_input_name) 
             # Scale (scale_input_name -> scale_output_name)
