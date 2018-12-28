@@ -163,6 +163,15 @@ def KitModel(weight_file = None):
         self.inputs.append(IR_node.variable_name + '_orig')
         self.nodes.append(IR_node.variable_name)
 
+    def emit_Crop(self, IR_node):
+        inputs = ', '.join("'" + self.IR_graph.get_node(i).real_variable_name + "'" for i in IR_node.in_edges)
+        self.add_body(1, "{:15} = helper.make_node('CaffeCrop', inputs=[{}], outputs=['{}'])".format(
+            IR_node.variable_name,
+            inputs,
+            IR_node.variable_name))
+        self.nodes.append(IR_node.variable_name)
+
+
     def emit_Conv(self, IR_node):
         kernel_shape = list(IR_node.get_attr('kernel_shape'))[:-2]
         dilations = list(IR_node.get_attr('dilations', [1] * (len(kernel_shape) + 2)))[1:-1]
