@@ -177,7 +177,7 @@ def special_polish_for_pva_net(caffemodel):
                     bias_blob.data.extend(layer.blobs[1].data)
     
     else:
-        raise ValueError('Please modify the prototxt first as readme_pvanet.txt')
+        raise ValueError('Please modify the prototxt first as readme.txt')
     
 
 
