@@ -1,9 +1,7 @@
 import onnx
-from mmdnn.conversion.onnx.onnx_polish import *
-
+from mmdnn.conversion.onnx.onnx_polish import onnx_polish
 
 def save_model(MainModel, network_filepath, weight_filepath, dump_filepath):
-    from mmdnn.conversion.onnx.polish import onnx_polish
     model = MainModel.KitModel(weight_filepath)
     onnx_polish(model)
     onnx.save(model, dump_filepath)    
