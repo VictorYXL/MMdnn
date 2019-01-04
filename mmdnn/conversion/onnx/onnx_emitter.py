@@ -165,7 +165,7 @@ def KitModel(weight_file = None):
 
     def emit_Crop(self, IR_node):
         inputs = ', '.join("'" + self.IR_graph.get_node(i).real_variable_name + "'" for i in IR_node.in_edges)
-        self.add_body(1, "{:15} = helper.make_node('CaffeCrop', inputs=[{}], outputs=['{}'])".format(
+        self.add_body(1, "{:15} = helper.make_node('Caffe::Crop', inputs=[{}], outputs=['{}'])".format(
             IR_node.variable_name,
             inputs,
             IR_node.variable_name))
