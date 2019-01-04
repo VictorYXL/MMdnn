@@ -109,9 +109,9 @@ def split_bnmsra_into_bn_and_scale(caffe_model):
             dst_layers[-1].blobs[3].shape.dim.append(channel)
             dst_layers[-1].blobs.remove(dst_layers[-1].blobs[0])
             dst_layers[-1].blobs.remove(dst_layers[-1].blobs[0])
-            mean_blob = dst_layers[-1].blobs.add()
-            mean_blob.shape.dim.append(1)
-            mean_blob.data.append(999.9823608398438)
+            move_blob = dst_layers[-1].blobs.add()
+            move_blob.shape.dim.append(1)
+            move_blob.data.append(1)
             dst_layers[-1].param.remove(dst_layers[-1].param[-1])
             dst_layers[-1].ClearField("batch_norm_msra_param")
             # Add scale layer
