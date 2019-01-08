@@ -36,7 +36,7 @@ def add_lost_scale_after_bn(caffemodel):
             # Rename BN output 
             dst_layers[-1].top[0] = scale_input_name
             # update rename dict
-            replace_name_map[bn_origin_output_name] = scale_output_name
+            replace_name_map[layer.top[0]] = layer.top[0] + '_scale_out'
             # Create scale layer
             scale_layer = caffe_pb2.LayerParameter()
             scale_layer.name = layer.name + '_scale'
@@ -73,25 +73,43 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
             if name in replace_name_map.keys():
                 layer.top.remove(name)
                 layer.top.insert(top_index, replace_name_map[name])
-        dst_layers.extend([layer])
 
         if layer.type == 'BatchNormMSRA':
-            # BNMSRA (bnmsra_input_name -> scale_input_name) 
+            # BNMSRA 
+            # blob[0] -> scale
+            # blob[1] -> bias
+            # blob[2] -> mean (EX)
+            # blob[3] -> E(X^2)
+            # var = E(X^2) - (EX)^2 = blob[3] - blob[2] ^ 2
+            # BN (bnmsra_input_name -> scale_input_name) 
             # Scale (scale_input_name -> scale_output_name)
-            bnmsra_origin_output_name = layer.top[0]
-            scale_input_name = layer.top[0] + '_scale_in'
-            scale_output_name = layer.top[0] + '_scale_out'
-            # Rename BNMSRA type and output 
-            dst_layers[-1].type = u'BatchNorm'
-            dst_layers[-1].top[0] = scale_input_name
-            # update rename dict
-            replace_name_map[bnmsra_origin_output_name] = scale_output_name
+            replace_name_map[layer.top[0]] = layer.top[0] + '_scale_out'
+
+            # Create BatchNorm layer
+            bn_layer = caffe_pb2.LayerParameter()
+            bn_layer.name = layer.name
+            bn_layer.type = u'BatchNorm'
+            bn_layer.bottom.append(layer.bottom[0])
+            bn_layer.top.append(layer.top[0] + '_scale_in')
+            mean_blob = bn_layer.blobs.add()
+            mean_blob.shape.dim.append(layer.blobs[2].shape.dim[1])
+            for i in range(layer.blobs[2].shape.dim[1]):
+                mean_blob.data.append(layer.blobs[2].data[i])
+            var_blob = bn_layer.blobs.add()
+            var_blob.shape.dim.append(layer.blobs[3].shape.dim[1])
+            for i in range(layer.blobs[3].shape.dim[1]):
+                var_blob.data.append(layer.blobs[3].data[i] - layer.blobs[2].data[i] * layer.blobs[2].data[i])
+            moving_coefficient_blob = bn_layer.blobs.add()
+            moving_coefficient_blob.shape.dim.append(1)
+            moving_coefficient_blob.data.append(1)
+            dst_layers.extend([bn_layer])
+
             # Create scale layer
             scale_layer = caffe_pb2.LayerParameter()
             scale_layer.name = layer.name + '_scale'
             scale_layer.type = u'Scale'
-            scale_layer.bottom.append(scale_input_name)
-            scale_layer.top.append(scale_output_name)
+            scale_layer.bottom.append(layer.top[0] + '_scale_in')
+            scale_layer.top.append(layer.top[0] + '_scale_out')
             # Add scale and bias blob in scale
             scale_blob = scale_layer.blobs.add()
             scale_blob.shape.dim.append(layer.blobs[0].shape.dim[1])
@@ -102,22 +120,9 @@ def split_bnmsra_into_bn_and_scale(caffemodel):
             for i in range(layer.blobs[1].shape.dim[1]):
                 bias_blob.data.append(layer.blobs[1].data[i])
             scale_layer.scale_param.bias_term = True
-            # update BN layer
-            channel = dst_layers[-1].blobs[2].shape.dim[1]
-            for i in range(len(dst_layers[-1].blobs[2].shape.dim)):
-                dst_layers[-1].blobs[2].shape.dim.remove(dst_layers[-1].blobs[2].shape.dim[0])
-                dst_layers[-1].blobs[3].shape.dim.remove(dst_layers[-1].blobs[3].shape.dim[0])
-            dst_layers[-1].blobs[2].shape.dim.append(channel)
-            dst_layers[-1].blobs[3].shape.dim.append(channel)
-            dst_layers[-1].blobs.remove(dst_layers[-1].blobs[0])
-            dst_layers[-1].blobs.remove(dst_layers[-1].blobs[0])
-            mean_blob = dst_layers[-1].blobs.add()
-            mean_blob.shape.dim.append(1)
-            mean_blob.data.append(999.9823608398438)
-            dst_layers[-1].param.remove(dst_layers[-1].param[-1])
-            dst_layers[-1].ClearField("batch_norm_msra_param")
-            # Add scale layer
             dst_layers.extend([scale_layer])
+        else:
+            dst_layers.extend([layer])
 
     for index in range(0, len(caffemodel.layer)):
         caffemodel.layer.pop()
