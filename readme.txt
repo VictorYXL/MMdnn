@@ -1,7 +1,7 @@
 1 Make sure to run in our custom pycaffe(in these folder's caffe is based on python3.5)
 2 Polish the prototxt manually:
 	2.1 Remove ImageNormalization layer
-	2.2 Remove crop layer when the input is the multiple of 32 and modify the related layers' bottom
+	2.2 Support crop without axis and offset
 	2.3 Find stretch layer and modify is into pooling layer
 		AVE or MAX are both OK
 		kernel_h = The input height of stretch layer
