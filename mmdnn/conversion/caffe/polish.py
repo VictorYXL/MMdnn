@@ -42,7 +42,7 @@ def add_lost_scale_after_bn(caffe_model):
             # Rename BN output 
             dst_layers[-1].top[0] = scale_input_name
             # update rename dict
-            replace_name_map[layer.top[0]] = layer.top[0] + '_scale_out'
+            replace_name_map[bn_origin_output_name] = scale_output_name
             # Create scale layer
             scale_layer = caffe_pb2.LayerParameter()
             scale_layer.name = layer.name + '_scale'
