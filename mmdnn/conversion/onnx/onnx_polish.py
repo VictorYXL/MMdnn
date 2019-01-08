@@ -5,7 +5,7 @@ import math
 
 
 def convert_to_variable_length_input_for_pva_net(onnx_model):
-    print('Set input and output height and width to \'* ')
+    print('Set input and output height and width to * ')
     for input in onnx_model.graph.input:
         if len(input.type.tensor_type.shape.dim) == 4:
             input.type.tensor_type.shape.dim[1].dim_param = '*'
@@ -14,6 +14,7 @@ def convert_to_variable_length_input_for_pva_net(onnx_model):
         if len(output.type.tensor_type.shape.dim) == 4:
             output.type.tensor_type.shape.dim[1].dim_param = '*'
             output.type.tensor_type.shape.dim[2].dim_param = '*'
+    return onnx_model
 
 
 def optimize_onnx_model(onnx_model):
