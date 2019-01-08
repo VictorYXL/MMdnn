@@ -121,11 +121,21 @@ def split_bnmsra_into_bn_and_scale(caffe_model):
         caffe_model.layer.pop()
     caffe_model.layer.extend(dst_layers)
 
+def check_ip_to_conv(caffemodel):
+    src_layers = caffemodel.layer
+    if len(src_layers) < 14:
+        return False
+    elif not (src_layers[-14].type == 'Pooling' and src_layers[-13].type == 'Split' and [layer.type for layer in src_layers[-12:]] == ['InnerProduct'] * 12):
+        return False
+    elif src_layers[-14].name != 'IP_TO_CONV':
+        return False
+    else:
+        return True
 
 # Must run in custom caffe
-def special_polish_for_pva_net(caffemodel):
+def special_polish_ip_to_conv(caffemodel):
     src_layers = caffemodel.layer
-    if src_layers[-14].type == 'Pooling' and src_layers[-13].type == 'Split' and [layer.type for layer in src_layers[-12:]] == ['InnerProduct'] * 12:
+    if check_ip_to_conv(caffemodel):
         print('Remove pooling layer: ' + str(src_layers[-14].name))
         for layer in src_layers[-12:]:
             if layer.blobs[0].shape.dim[1] != src_layers[-12].blobs[0].shape.dim[1]:
@@ -138,12 +148,12 @@ def special_polish_for_pva_net(caffemodel):
         for layer in inner_product_layers[0]:
             if layer.blobs[0].shape.dim[0] == 2:
                 for i in range(layer.blobs[0].shape.dim[1]):
-                    layer.blobs[0].data[i] -= layer.blobs[0].data[i + layer.blobs[0].shape.dim[1]]
+                    layer.blobs[0].data[i] = layer.blobs[0].data[i + layer.blobs[0].shape.dim[1]] - layer.blobs[0].data[i]
                 for i in range(layer.blobs[0].shape.dim[1]):
                     t = layer.blobs[0].data.pop(-1)
                 layer.blobs[0].shape.dim[0] = 1
                 if len(layer.blobs) > 1:
-                     layer.blobs[1].data[0] -= layer.blobs[1].data[1]
+                     layer.blobs[1].data[0] = layer.blobs[1].data[1] - layer.blobs[1].data[0]
                      t = layer.blobs[1].data.pop(-1)
                      layer.blobs[1].shape.dim[0] = 1
             else:
@@ -175,10 +185,6 @@ def special_polish_for_pva_net(caffemodel):
                 bias_blob.shape.dim.append(sum(layer.blobs[1].shape.dim[0] for layer in inner_product_layers[i]))
                 for layer in inner_product_layers[i]:
                     bias_blob.data.extend(layer.blobs[1].data)
-    
-    else:
-        raise ValueError('Please modify the prototxt first as readme.txt')
-    
 
 
 
@@ -199,7 +205,7 @@ def caffe_polish(src_model_file, dst_model_file, src_prototxt = None, dst_protot
 
     add_lost_scale_after_bn(caffe_model)
     split_bnmsra_into_bn_and_scale(caffe_model)
-    special_polish_for_pva_net(caffe_model)
+    special_polish_ip_to_conv(caffe_model)
 
     file = open(dst_model_file, 'wb')
     file.write(caffe_model.SerializeToString())

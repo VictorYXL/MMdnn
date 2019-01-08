@@ -1,0 +1,298 @@
+layer {
+	name: "IP_TO_CONV"
+	type: "Pooling"
+	bottom: "rpn_head_3x3"
+	top: "stretched_rpn_head_3x3"
+	pooling_param {
+		pool: AVE
+		kernel_h: ??
+		kernel_w: ??
+		stride: 1
+	}
+}
+
+# -------------------------- RPN-Group1
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_score_g1"
+  name: "stretched_rpn_head_1x1_score_g1"
+  type: "InnerProduct"
+  inner_product_param {
+    num_output: 2 # (1 * 2)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_delta_g1"
+  name: "stretched_rpn_head_1x1_delta_g1"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 4 # (1 * 4)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+#landmarks
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_landmark_delta_g1"
+  name: "stretched_rpn_head_1x1_landmark_delta_g1"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 10 # (1 * 10)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+
+# -------------------------- RPN-Group2
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_score_g2"
+  name: "stretched_rpn_head_1x1_score_g2"
+  type: "InnerProduct"
+  inner_product_param {
+    num_output: 2 # (1 * 2)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_delta_g2"
+  name: "stretched_rpn_head_1x1_delta_g2"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 4 # (1 * 4)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+#landmarks
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_landmark_delta_g2"
+  name: "stretched_rpn_head_1x1_landmark_delta_g2"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 10 # (1 * 10)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+
+# -------------------------- RPN-Group3
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_score_g3"
+  name: "stretched_rpn_head_1x1_score_g3"
+  type: "InnerProduct"
+  inner_product_param {
+    num_output: 2 # (1 * 2)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_delta_g3"
+  name: "stretched_rpn_head_1x1_delta_g3"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 4 # (1 * 4)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+#landmarks
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_landmark_delta_g3"
+  name: "stretched_rpn_head_1x1_landmark_delta_g3"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 10 # (1 * 10)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+
+# -------------------------- RPN-Group4
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_score_g4"
+  name: "stretched_rpn_head_1x1_score_g4"
+  type: "InnerProduct"
+  inner_product_param {
+    num_output: 2 # (1 * 2)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_delta_g4"
+  name: "stretched_rpn_head_1x1_delta_g4"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 4 # (1 * 4)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+
+#landmarks
+layer {
+  bottom: "stretched_rpn_head_3x3"
+  top: "stretched_rpn_head_1x1_landmark_delta_g4"
+  name: "stretched_rpn_head_1x1_landmark_delta_g4"
+  type: "InnerProduct"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 10 # (1 * 10)
+    weight_filler {
+      type: "gaussian"
+      std: 0.001
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
