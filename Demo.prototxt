@@ -1,3 +1,20 @@
+name: "PVANET"
+layer {
+  top: "data"
+  name: "input_data"
+  type: "Input"
+  input_param {    
+    shape {
+      dim: 1
+      dim: 3
+      dim: 32
+      dim: 32
+    }
+  }
+}
+
+XXXXXX
+
 layer {
 	name: "IP_TO_CONV"
 	type: "Pooling"
@@ -11,7 +28,6 @@ layer {
 	}
 }
 
-# -------------------------- RPN-Group1
 layer {
   bottom: "stretched_rpn_head_3x3"
   top: "stretched_rpn_head_1x1_score_g1"
