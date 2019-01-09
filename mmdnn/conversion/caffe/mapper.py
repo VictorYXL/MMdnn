@@ -64,6 +64,9 @@ class NodeMapper(object):
             if node.kind == NodeKind.Deconvolution:
                 o_h_tf = int(node.kernel_parameters.s_h) * (input_shape.height - 1) + ko_h - 2 * int(node.kernel_parameters.p_h)
                 o_w_tf = int(node.kernel_parameters.s_w) * (input_shape.width - 1) + ko_w - 2 * int(node.kernel_parameters.p_w)
+            elif node.kind == NodeKind.Convolution:
+                o_h_tf = o_h_caffe
+                o_w_tf = o_w_caffe
             else:
                 o_h_tf = (input_shape.height + node.kernel_parameters.p_h * 2 - ko_h + 1) // node.kernel_parameters.s_h
                 o_w_tf = (input_shape.width + node.kernel_parameters.p_w * 2 - ko_w + 1) // node.kernel_parameters.s_w
