@@ -131,7 +131,7 @@ def split_bnmsra_into_bn_and_scale(caffe_model):
 def caffe_polish(src_model_file, dst_model_file, src_prototxt = None, dst_prototxt = None):
     tmp_model_file = None
     if src_prototxt != None and dst_prototxt != None:
-        tmp_model_file = "temp_" + src_model_file
+        tmp_model_file = src_model_file + ".temp"
         # Convert caffe_model + prototxt -> temp caffe_model
         net = caffe.Net(src_prototxt, src_model_file, caffe.TEST)
         net.save(tmp_model_file)
