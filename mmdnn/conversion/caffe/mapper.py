@@ -56,10 +56,15 @@ class NodeMapper(object):
                 raise ValueError
 
             dilation = node.parameters.dilation[0] if hasattr(node.parameters, 'dilation') and node.parameters.dilation else 1
-            o_h_caffe = node.output_shape.height
-            o_w_caffe = node.output_shape.width
+
             ko_h = dilation * (int(node.kernel_parameters.k_h) - 1) + 1
             ko_w = dilation * (int(node.kernel_parameters.k_w) - 1) + 1
+            if node.kind == NodeKind.Pooling and hasattr(node.parameters, 'round') and node.parameters.round == 0:
+                o_h_caffe = math.ceil((input_shape.height + node.kernel_parameters.p_h * 2 - ko_h + 1) / node.kernel_parameters.s_h)
+                o_w_caffe = math.ceil((input_shape.width + node.kernel_parameters.p_w * 2 - ko_w + 1) / node.kernel_parameters.s_w)
+            else:
+                o_h_caffe = node.output_shape.height
+                o_w_caffe = node.output_shape.width
 
             if node.kind == NodeKind.Deconvolution:
                 o_h_tf = int(node.kernel_parameters.s_h) * (input_shape.height - 1) + ko_h - 2 * int(node.kernel_parameters.p_h)
