@@ -125,8 +125,6 @@ def split_bnmsra_into_bn_and_scale(caffe_model):
             dst_layers.extend([layer])
     for index in range(0, len(caffe_model.layer)):
         caffe_model.layer.pop()
-    for index in range(0, len(caffe_model.layer)):
-        caffe_model.layer.pop()
     caffe_model.layer.extend(dst_layers)
 
 def check_ip_to_conv(caffemodel):
