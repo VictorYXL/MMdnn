@@ -127,13 +127,13 @@ def split_bnmsra_into_bn_and_scale(caffe_model):
         caffe_model.layer.pop()
     caffe_model.layer.extend(dst_layers)
 
-def check_ip_to_conv(caffemodel):
+def check_innerproduct_to_conv(caffemodel):
     src_layers = caffemodel.layer
     if len(src_layers) < 14:
         return False
     elif not (src_layers[-14].type == 'Pooling' and src_layers[-13].type == 'Split' and [layer.type for layer in src_layers[-12:]] == ['InnerProduct'] * 12):
         return False
-    elif src_layers[-14].name != 'IP_TO_CONV':
+    elif src_layers[-14].name != 'InnerProduct_to_Conv':
         return False
     else:
         return True
@@ -141,7 +141,7 @@ def check_ip_to_conv(caffemodel):
 # Must run in custom caffe
 def special_polish_ip_to_conv(caffemodel):
     src_layers = caffemodel.layer
-    if check_ip_to_conv(caffemodel):
+    if check_innerproduct_to_conv(caffemodel):
         print('Remove pooling layer: ' + str(src_layers[-14].name))
         for layer in src_layers[-12:]:
             if layer.blobs[0].shape.dim[1] != src_layers[-12].blobs[0].shape.dim[1]:

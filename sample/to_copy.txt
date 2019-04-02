@@ -1,3 +1,5 @@
+// Copy these header message to cover input in the target prototxt 
+// (from beginning to first conv layer before)
 name: "PVANET"
 input: "data"
 input_dim: 1
@@ -5,17 +7,18 @@ input_dim: 3
 input_dim: 128
 input_dim: 128
 
-XXXXXX
-
+// Copy these header message to cover the last layers in the target prototxt 
+// (from the last split layer before stretched layer to the end, with the name of "rpn_head_3x3_rpn_head_3x3_relu_0_split")
+// the kernel of Pooling layer = the input size of this layer ( for PVENET, it is input_dim / 8)
 layer {
-	name: "IP_TO_CONV"
+	name: "Inner_Product_to_Conv"
 	type: "Pooling"
 	bottom: "rpn_head_3x3"
 	top: "stretched_rpn_head_3x3"
 	pooling_param {
 		pool: AVE
-		kernel_h: (32)??
-		kernel_w: (32)??
+		kernel_h: 32
+		kernel_w: 32
 		stride: 1
 	}
 }
