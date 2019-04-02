@@ -1,17 +1,9 @@
 name: "PVANET"
-layer {
-  top: "data"
-  name: "input_data"
-  type: "Input"
-  input_param {    
-    shape {
-      dim: 1
-      dim: 3
-      dim: 32
-      dim: 32
-    }
-  }
-}
+input: "data"
+input_dim: 1
+input_dim: 3
+input_dim: 128
+input_dim: 128
 
 XXXXXX
 
@@ -22,8 +14,8 @@ layer {
 	top: "stretched_rpn_head_3x3"
 	pooling_param {
 		pool: AVE
-		kernel_h: ??
-		kernel_w: ??
+		kernel_h: (32)??
+		kernel_w: (32)??
 		stride: 1
 	}
 }
