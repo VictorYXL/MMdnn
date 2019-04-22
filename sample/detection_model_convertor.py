@@ -98,8 +98,6 @@ def get_network_filename(framework, temp_filename, output_model_filename):
 
 def _main():
     parser = _get_parser()
-    print(type(parser))
-    print(1/0)
     args, unknown_args = parser.parse_known_args()
     temp_filename = uuid.uuid4().hex
     ir_args, unknown_args = _extract_ir_args(args, unknown_args, temp_filename)
