@@ -296,7 +296,6 @@ class CntkParser(Parser):
         pass
 
     def rename_Pooling(self, source_node):
-        
         IR_node = self._convert_identity_operation(source_node, new_op='Pool')
         dim = len(IR_node.attr['_output_shapes'].list.shape[0].dim)
         kwargs = {}
