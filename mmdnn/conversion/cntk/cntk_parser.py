@@ -13,6 +13,7 @@ from mmdnn.conversion.common.IR.graph_pb2 import NodeDef, GraphDef, DataType
 from mmdnn.conversion.common.utils import *
 from mmdnn.conversion.common.DataStructure.parser import Parser
 import sys
+# For densenet with more layers
 sys.setrecursionlimit(10000)
 
 class CntkParser(Parser):
