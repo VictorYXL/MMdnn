@@ -12,7 +12,8 @@ import mmdnn.conversion.common.IR.graph_pb2 as graph_pb2
 from mmdnn.conversion.common.IR.graph_pb2 import NodeDef, GraphDef, DataType
 from mmdnn.conversion.common.utils import *
 from mmdnn.conversion.common.DataStructure.parser import Parser
-
+import sys
+sys.setrecursionlimit(10000)
 
 class CntkParser(Parser):
 
@@ -294,6 +295,7 @@ class CntkParser(Parser):
         pass
 
     def rename_Pooling(self, source_node):
+        
         IR_node = self._convert_identity_operation(source_node, new_op='Pool')
         dim = len(IR_node.attr['_output_shapes'].list.shape[0].dim)
         kwargs = {}
@@ -327,6 +329,9 @@ class CntkParser(Parser):
             assert pad == padding[-1]
         kwargs['auto_pad'] = 'SAME_LOWER' if padding[0] else 'VALID'
         kwargs['pads'] = self._convert_padding_to_IR(kwargs['kernel_shape'][1:-1], padding)
+        if source_node.layer.attributes['ceilOutDim'] == True:
+            kwargs['pads'][5] =  ((source_node.layer.outputs[0].shape[1] - 1) * source_node.layer.attributes['strides'][1] + source_node.layer.attributes['poolingWindowShape'][1]) - source_node.layer.inputs[0].shape[1]
+            kwargs['pads'][6] =  ((source_node.layer.outputs[0].shape[2] - 1) * source_node.layer.attributes['strides'][2] + source_node.layer.attributes['poolingWindowShape'][2]) - source_node.layer.inputs[0].shape[2]
 
         assign_IRnode_values(IR_node, kwargs)
 
