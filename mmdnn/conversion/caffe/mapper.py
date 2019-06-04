@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 import numpy as np
+import math
 
 from mmdnn.conversion.caffe.errors import ConversionError
 from mmdnn.conversion.caffe.common_graph import Node
